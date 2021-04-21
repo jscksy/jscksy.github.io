@@ -115,7 +115,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">5</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">6</span></a>
 
   </li>
   </ul>
@@ -141,6 +141,322 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/21/%E6%AE%8B%E5%B7%AE%E7%BD%91%E7%BB%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/me.jpg">
+      <meta itemprop="name" content="XinLai">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/21/%E6%AE%8B%E5%B7%AE%E7%BD%91%E7%BB%9C/" class="post-title-link" itemprop="url">Untitled</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-04-21 10:07:06 / Modified: 10:07:29" itemprop="dateCreated datePublished" datetime="2021-04-21T10:07:06+08:00">2021-04-21</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="残差网络"><a href="#残差网络" class="headerlink" title="残差网络"></a>残差网络</h1><p>概述:在RandLA-Net网络的文献中看到使用了这一结构，故在上网查找了相关的资料学习，并将相应笔记记录于下。</p>
+<h2 id="什么是残差（residual）？"><a href="#什么是残差（residual）？" class="headerlink" title="什么是残差（residual）？"></a>什么是残差（residual）？</h2><pre><code>&quot;残差在数理统计中是指实际观察值于估计值（拟合值）之间的差。&quot;
+&quot;如果回归模型正确的话，我们可以将残差看作误差的观测值&quot;
+</code></pre>
+<p>举例来说，假如我们想找一个$x$，使得$f(x)=b$，给定一个$x$的估计值$x_0$，残差就是$b-f(x_0)$，误差就是$x-x_0$。</p>
+<p>即使$x$不知道，我们依然可以计算残差，只是不能计算误差罢了。</p>
+<h2 id="什么是残差神经网络（Residual-Networks，ResNets）？"><a href="#什么是残差神经网络（Residual-Networks，ResNets）？" class="headerlink" title="什么是残差神经网络（Residual Networks，ResNets）？"></a>什么是残差神经网络（Residual Networks，ResNets）？</h2><p>在了解残差网络之前，先了解下面这个问题。</p>
+<p>　　Q1：神经网络越深越好吗？（Deeper is better？）</p>
+<p>　　A1：如图 1 所示，在训练集上，传统神经网络越深效果不一定越好。而 Deep Residual Learning for Image Recognition 这篇论文认为，理论上，可以训练一个 shallower 网络，然后在这个训练好的 shallower 网络上堆几层 identity mapping（恒等映射） 的层，即输出等于输入的层，构建出一个 deeper 网络。这两个网络（shallower 和 deeper）得到的结果应该是一模一样的，因为堆上去的层都是 identity mapping。这样可以得出一个结论：理论上，在训练集上，Deeper 不应该比 shallower 差，即越深的网络不会比浅层的网络效果差。但为什么会出现图 1 这样的情况呢，随着层数的增多，训练集上的效果变差？这被称为退化问题（degradation problem），原因是随着网络越来越深，训练变得原来越难，网络的优化变得越来越难。理论上，越深的网络，效果应该更好；但实际上，由于训练难度，过深的网络会产生退化问题，效果反而不如相对较浅的网络。而残差网络就可以解决这个问题的，残差网络越深，训练集上的效果会越好。（测试集上的效果可能涉及过拟合问题。过拟合问题指的是测试集上的效果和训练集上的效果之间有差距。）</p>
+<p><img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E4%B8%8D%E5%90%8C%E6%B7%B1%E5%BA%A6%E4%BC%A0%E7%BB%9F%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E7%9A%84%E6%95%88%E6%9E%9C%E5%AF%B9%E6%AF%94%E5%9B%BE.png"></p>
+<p>（“plain” network指的是没有使用 shortcut connection 的网络）</p>
+<p>残差网络通过加入 shortcut connections，变得更加容易被优化。包含一个 shortcut connection 的几层网络被称为一个残差块（residual block），如图 2 所示。（shortcut connection，即图 2 右侧从 $x$ 到 ⨁ 的箭头）</p>
+<p><img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E6%AE%8B%E5%B7%AE%E5%9D%97.png"></p>
+<p> …..</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/21/RandLA-Net/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/me.jpg">
+      <meta itemprop="name" content="XinLai">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/21/RandLA-Net/" class="post-title-link" itemprop="url">Untitled</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-04-21 09:59:30 / Modified: 10:05:43" itemprop="dateCreated datePublished" datetime="2021-04-21T09:59:30+08:00">2021-04-21</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="RandLA-Net-大场景三维点云语义分割框架"><a href="#RandLA-Net-大场景三维点云语义分割框架" class="headerlink" title="RandLA-Net:大场景三维点云语义分割框架"></a>RandLA-Net:大场景三维点云语义分割框架</h1><p>概述：一种适用于大规模3D点云语义分割高效且轻量的模型。采用简单的随机点采样方法，随机采样导致的关键特征丢失，通过引入一种新颖的局部特征聚合模块来克服。</p>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><ul>
+<li><p>3D点云语义分割的一个关键挑战是，深度传感器获取的原始点云通常是不规则采样，无结构且无序的，这种非结构化的数据，无法直接投入到深度卷积网络中进行训练。</p>
+</li>
+<li><p>PointNet的开拓性工作，使得直接处理3D点云成为可能。它使用共享的多层感知机MLP，但这无法获取每个点更为广泛的上下文信息。</p>
+</li>
+<li><p>为了学习更丰富的局部结构，后续又引入了许多专用的神经模块。这些模块可以归类为：<br>  <strong>1.neighbouring feature pooling</strong><br>  <strong>2.graph message passing</strong><br>  <strong>3.kernel-based convolution</strong><br>  <strong>4.attention-based aggregation</strong> </p>
+</li>
+<li><p>该模型相比于传统的3D点云语义分割方法，最大的优点在于对大规模数据场合的适用性。  </p>
+<p>  <strong>限制因素</strong>：<br>  1.传统网络的点采样方法在计算上或内存效率低下<br>  2.大多数现有的本地特征学习算法，依靠计算昂贵的内核化或图形构造<br>  3.接受场大小有限，现有局部特征学习器要么无法捕获复杂结构，要么效率低下</p>
+<p>  <strong>针对上述限制因素，本文创新性提出了</strong><br>  1.高效的采样方法（随机采样）<br>  （点采样和逆密度采样是小规模点云最常见的采样方法）<br>  2.有效的局部特征学习器 </p>
+</li>
+<li><p>$\color{red}{对每个3D点,首先引入局部空间编码（LocSE）单元以显示的保留局部和结构}$</p>
+</li>
+<li><p>$\color{red}{其次，利用attentive pooling来自动保留有用的本地功能}$</p>
+</li>
+<li><p>$\color{red}{第三，将多个LocSE单元和attentive pooling堆叠为膨胀的残差块，从而大大增加了每个点的有效接收场。}$</p>
+</li>
+<li><p>$\color{red}{所有这些神经组件都实现为共享MLP，因此具有显着的内存和计算效率}$</p>
+</li>
+</ul>
+<h2 id="近期的其他相关研究"><a href="#近期的其他相关研究" class="headerlink" title="近期的其他相关研究"></a>近期的其他相关研究</h2><p>为了从3D点云中提取特征，传统方法通常是手动 hand-craft 特征。最近的基于学习的方法主要包括此处概述的基于投影的，基于体素的和基于点的方案。</p>
+<ul>
+<li><p><strong>基于投影和体素的网络：</strong>   为了利用2D CNNs的成功，许多工作将3D点云投影/展平到2D图像上，以解决对象检测的任务。但是，在投影过程中会丢失许多几何细节。或者，可以将点云体素化为3D网格，然后应用强大的3D CNNs。尽管它们在语义分割和对象检测方面取得了领先的成果，但它们的主要局限性是计算量大，特别是在处理大规模点云时。</p>
+</li>
+<li><p><strong>基于点的网络：</strong> 受PointNet / PointNet ++ 的启发，许多最新著作引入了复杂的神经模块来学习每点的局部特征。这些模块通常可分类为1）neighbouring feature pooling，2）graph message passing，3）kernel-based convolution 和 4） attention-based aggregation。尽管这些网络在小点云上已显示出令人鼓舞的结果，但是由于它们的高计算和内存成本，它们中的大多数不能直接扩展到大型方案。</p>
+</li>
+<li><p><strong>学习大规模点云：</strong> SPG 将大点云作为超级图进行预处理，以学习每个超点语义。最近的FCPN 和PCT 将基于体素的网络和基于点的网络都应用于处理大量的点云。但是，图分区和体素化在计算上都是昂贵的。相反，我们高效的RandLA-Net可进行端到端的训练，而无需任何其他的前/后处理步骤。</p>
+</li>
+</ul>
+<p>与它们相比，RandLA-Net在四种方面有所区别：</p>
+<ol>
+<li>它仅依赖于网络内的随机采样，因此需要更少的内存和计算量；</li>
+<li>所提出的局部特征聚合器可以通过明确考虑局部空间关系和点特征来获得连续更大的接收场，从而对于学习复杂的局部模式更加有效和健壮；</li>
+<li>整个网络仅由共享的MLP组成，而不依赖于任何昂贵的操作（如图形构建和内核化），因此对于大规模点云而言，效率极高。</li>
+<li>RandLA-Net可进行端到端的培训，而无需任何其他的前/后处理步骤</li>
+</ol>
+<h2 id="RandLA-Net"><a href="#RandLA-Net" class="headerlink" title="RandLA-Net"></a>RandLA-Net</h2><ul>
+<li><p><strong>随机采样</strong></p>
+</li>
+<li><p><strong>本地特征聚合</strong></p>
+<p>  如下图所示，局部特征聚合模块并行地应用于每个3D点，它由三个神经单元组成：1）局部空间编码（LocSE），2）attentive pooling 3 ）dilated residual block(扩张的残差块)。</p>
+<p>  <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E5%B1%80%E9%83%A8%E7%89%B9%E5%BE%81%E8%81%9A%E5%90%88%E6%A8%A1%E5%9D%97%E7%BB%93%E6%9E%84%E5%9B%BE.png"></p>
+<ol>
+<li><p>Local Spatial Encoding<br> 给定点云P以及每个点的特征（例如原始RGB或中间学习的特征），此局部空间编码单元会明确嵌入所有相邻点的x-y-z坐标，从而使相应的点特征始终知道其相对位置空间位置。这使LocSE单元可以显式观察局部几何图案，从而最终使整个网络受益，而有效地学习复杂的局部结构。特别地，该单元包括以下步骤：   </p>
+<p> <strong>Finding Neighbouring Points.</strong> 对于第i个点，通过简单的基于逐点欧几里得距离的K近邻（KNN）算法收集其相邻点。  </p>
+<p> <strong>Relative Point Position Encoding.</strong> 对于中心点$p_i$的每个最近的K个点{$p_i^1···p_i^k···p_i^K$},我们明确编码相对点位置，如下所示：</p>
+<p> <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E5%B1%80%E9%83%A8%E7%BC%96%E7%A0%81%E7%BB%93%E6%9E%84.png"></p>
+<ul>
+<li>$p_i$和$p_i^k$是点的x-y-z位置</li>
+<li>⊕是串联操作</li>
+<li>|| ·||计算相邻点和中心点之间的欧几里得距离</li>
+<li>看起来$r_i^k$是根据冗余点位置信息进行编码的。有趣的是，这倾向于帮助网络学习局部特征并在实践中获得良好的性能。</li>
+</ul>
+<p> <strong>Point Feature Augmentation.</strong> 对于每个相邻点$p_i^k$，将编码的相对点位置$r_i^k$与它的对应点特征$f_i^k$串联在一起，从而获得增强的特征向量$\hat{f}_i^k$<br> 最终，LocSE单元的输出是一组新的相邻要素$\hat{F_i}={\hat{f}_i^1···\hat{f}_i^k···\hat{f}_i^K}$，它明确地编码了中心点$p_i$的局部几何结构。  </p>
+</li>
+<li><p>Attentive Pooling<br> 该神经单元用于汇总邻近点特征$\hat{F_i}$的集合。现有论文通常使用最大/平均池来硬集成相邻特征，从而导致大部分信息丢失。相比之下，网络转向强大的注意力机制来自动学习重要的本地特征。<br> <strong>Computing Attention Scores.</strong> 给定一组局部特征$\hat{F_i}$，设计了一个共享函数g()来为每个功能学习唯一的注意力得分。基本上，函数g()包含一个共享MLP，后跟softmax。它的正式定义如下：<br> <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E6%B3%A8%E6%84%8F%E5%8A%9B%E5%BE%97%E5%88%86.png"><br> 其中W是共享MLP的可学习权重.  </p>
+<p> <strong>Weighted Summation.</strong> 学到的注意力分数可以看作是自动选择重要特征的softmask。正式地，这些特征的加权总和如下：<br> <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/K%E8%BF%91%E9%82%BB%E7%82%B9%E7%89%B9%E5%BE%81%E5%8A%A0%E6%9D%83.png"></p>
+</li>
+<li><p>Dilated Residual Block(膨胀残留块)</p>
+<ul>
+<li>由于将要对大的点云进行实质性的下采样，因此希望显着增加每个点的接收场，从而即使某些点被丢弃，输入点云的几何细节也更有可能被保留。</li>
+<li>如图3所示，将多个LocSE和Attentive Pooling单元通过a skip connection堆叠在一起，作为扩张的残差块</li>
+<li>为了进一步说明扩张残差块的功能，图4显示了红色3D点在第一次LocSE / Attentive Pooling操作之后观察到K KK个相邻点，然后在第二次之后能够从最多$K^2$个相邻点（即two-hop neighbourhood ）接收信息。这是扩大接受域并通过特征传播扩大有效邻域的cheap方法。</li>
+<li>从理论上讲，堆叠的单位越多，此block的作用范围就越大，越强大。但是，更多的单元将不可避免地牺牲整体计算效率。另外，整个网络很可能会过度配合。</li>
+<li>在RandLA-Net中，简单地堆叠了两组LocSE和Attentive Pooling作为标准残差块，在效率和效果之间取得了令人满意的平衡。   </li>
+</ul>
+<p> <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E6%AE%8B%E5%B7%AE%E5%9D%97%E6%89%A9%E5%A4%A7%E7%82%B9%E7%9A%84%E6%8E%A5%E5%8F%97%E5%9C%BA%E7%A4%BA%E6%84%8F%E5%9B%BE.png"></p>
+<p> <strong>总体而言</strong></p>
+<ul>
+<li>局部特征聚合模块旨在通过明确考虑相邻的几何形状并显着增加接收场来有效保留复杂的局部结构。</li>
+<li>该模块仅由前馈MLP组成，因此计算效率高。</li>
+</ul>
+</li>
+<li><p>Implementation</p>
+<ul>
+<li>通过堆叠多个局部特征聚合模块和随机采样层来实现RandLA-Net。</li>
+<li>将Adam优化器与默认参数一起使用。初始学习率设置为0.01，并在每个时期后降低5％。最近点的数量K设置为16。</li>
+<li>为了并行训练RandLA-Net，从每个点云中采样固定数量的点$(~10^6)$作为输入。</li>
+<li>在测试过程中，整个原始点云将送到网络中，以推断每个点的语义，而无需任何预处理/后处理。  </li>
+</ul>
+</li>
+</ol>
+<p>  <strong>网络详细结构如下图所示：</strong><br>  <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/RandLA-Net%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84.png"></p>
+</li>
+<li><p>图7显示了RandLANet的详细架构。</p>
+</li>
+<li><p>该网络遵循具有跳跃连接的广泛使用的编码器-解码器体系结构。</p>
+</li>
+<li><p>首先将输入点云馈送到共享的MLP层以提取每个点的特征。</p>
+</li>
+<li><p>然后使用四个编码和解码层来学习每个点的特征。</p>
+</li>
+<li><p>最后，使用三个完全连接的层和一个dropout层来预测每个点的语义标签。每个部分的详细信息如下：<br>  <strong>NetNetwork Input:</strong>  输入是一个大型的点云，大小为$N*d_{in}$（不考虑批处理）,其中N是点数$d_{in}$是每个输入点的特征维。</p>
+<ul>
+<li>对于S3DIS 和Semantic3D 数据集，每个点都由其3D坐标和颜色信息（即x-y-z-R-G-B）表示，</li>
+<li>而SemanticKITTI [3]数据集的每个点仅由3D坐标表示。</li>
+</ul>
+<p>  <strong>Encoding Layers:</strong> </p>
+<ul>
+<li>网络中使用了四个编码层，以逐渐减小点云的大小并增加每点特征的尺寸。</li>
+<li>每个编码层都包含一个局部特征聚合模块（第4.3节）和一个随机采样操作（第4.2节）。</li>
+<li>点云以四倍的抽取比率进行下采样。特别是，每层之后仅保留25％的点，即（N→N/4→N/6→N/64→N /256）。</li>
+<li>同时，逐点特征维逐渐增加每一层以保留更多信息，即（8→32→128→256→512）。</li>
+</ul>
+<p>  <strong>Decoding Layers:</strong></p>
+<ul>
+<li>在上述编码层之后使用四个解码层。</li>
+<li>对于解码器中的每一层，我们首先使用KNN算法为每个查询点找到一个最近的相邻点，</li>
+<li>然后通过$\color{red}最近邻插值$对点特征集进行上采样。</li>
+<li>接下来，将经过上采样的特征图与通过skip连接对图层进行编码而生成的中间特征图进行级联，之后将共享的MLP应用于级联特征图。</li>
+</ul>
+<p>  <strong>Final Semantic Prediction:</strong></p>
+<ul>
+<li>每个点的最终语义标签是通过三个共享的全连接层（N，64）→（N，32）→（N，nclass）和a dropout layer获得的。dropout ratio 为0.5。</li>
+</ul>
+<p>  <strong>Network Output:</strong></p>
+<ul>
+<li>RandLA-Net的输出是所有点的预测语义，大小为$N*n_{class}$,其中$n_{class}$是类的数量。</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/21/%E9%9A%90%E9%A9%AC%E5%B0%94%E7%A7%91%E5%A4%AB%E6%A8%A1%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/me.jpg">
+      <meta itemprop="name" content="XinLai">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/21/%E9%9A%90%E9%A9%AC%E5%B0%94%E7%A7%91%E5%A4%AB%E6%A8%A1%E5%9E%8B/" class="post-title-link" itemprop="url">Untitled</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-04-21 09:57:14 / Modified: 09:58:31" itemprop="dateCreated datePublished" datetime="2021-04-21T09:57:14+08:00">2021-04-21</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="隐马尔科夫模型"><a href="#隐马尔科夫模型" class="headerlink" title="隐马尔科夫模型"></a>隐马尔科夫模型</h1><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p><strong>定义：</strong> 隐马尔科夫模型是关于时序的概率模型，描述由一个隐藏的马尔科夫链随机生成不可观测的状态随机序列，再由各个状态生成一个观测而产生观测随机序列的过程。</p>
+<p>马尔科夫模型的形式定义如下：<br>设$Q$是所有可能的状态的集合，$V$是所有可能的观测的集合<br>$$Q={q_1,q_2,···,q_N},V={v_1,v_2,···,v_M}$$</p>
+<p>其中，N是可能的状态数，M是可能的观测数.<br>I是长度为T的状态序列，O是对应的观测序列.<br>$$I={i_1,i_2,···,i_T}, O={o_1,o_2,···,o_r}$$</p>
+<p><strong>齐次马尔科夫性假设：</strong> 即假设隐藏的马尔科夫链在任意时刻t的状态只依赖于其前一时刻的状态，与其他时刻的状态及观测无关，也与时刻t无关</p>
+<p><strong>观测独立性假设：</strong> 即假设任意时刻的观测只依赖于该时刻的马尔科夫链的状态，与其他观测及状态无关</p>
+<p><img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/image/%E9%9A%90%E9%A9%AC%E5%B0%94%E7%A7%91%E5%A4%AB%E6%A8%A1%E5%9E%8B%E7%9A%84%E9%97%AE%E9%A2%98.png"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -216,83 +532,6 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public init() &#123;</span><br><span class="line">    let pos &#x3D; Cartesian3.fromDegrees(114, 30, 5000);</span><br><span class="line">    &#x2F;&#x2F; tslint:disable-next-line:variable-name</span><br><span class="line">    let Scanoptions &#x3D; &#123; initial_heading: 0, scantype: 2, scanrange: [60, 300], sacnspeed: this.speed &#125;;</span><br><span class="line">    this.sensor &#x3D; new _Sen(</span><br><span class="line">        this.cmap,</span><br><span class="line">        &#123; radasid: &quot;radas1&quot;, id: &quot;Plane1&quot;, position: pos, size: 2000, show: this.isShow, slicecolor: this.slicecolor, facecolor: &quot;rgba(0, 0, 255, 0.2)&quot;, scancolor: &quot;rgba(255, 0, 0, 0.7)&quot;, type: this.radars.value, detect: false, scanoptions: Scanoptions &#125;</span><br><span class="line">    );</span><br><span class="line">    this.cmap.addLayer(this.sensor);</span><br><span class="line">    this.cmap.viewer?.zoomTo(this.cmap.viewer?.entities);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>效果:<br><img src="/2021/04/20/Cesium-Radar/Radar.gif" alt="固定点radar"></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/20/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/me.jpg">
-      <meta itemprop="name" content="XinLai">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/04/20/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-04-20 14:07:54" itemprop="dateCreated datePublished" datetime="2021-04-20T14:07:54+08:00">2021-04-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-07-13 16:17:33" itemprop="dateModified" datetime="2020-07-13T16:17:33+08:00">2020-07-13</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 
       
     </div>
@@ -451,66 +690,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/07/13/myfirstpicture/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/me.jpg">
-      <meta itemprop="name" content="XinLai">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/13/myfirstpicture/" class="post-title-link" itemprop="url">myfirstpicture</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2020-07-13 17:23:11 / Modified: 17:24:36" itemprop="dateCreated datePublished" datetime="2020-07-13T17:23:11+08:00">2020-07-13</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="图片"><a href="#图片" class="headerlink" title="图片"></a>图片</h2><p><img src="/2020/07/13/myfirstpicture/test.jpg"></p>
-<hr>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
 
@@ -579,7 +758,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

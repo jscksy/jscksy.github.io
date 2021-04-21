@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="RandLA-Net:大场景三维点云语义分割框架概述：一种适用于大规模3D点云语义分割高效且轻量的模型。采用简单的随机点采样方法，随机采样导致的关键特征丢失，通过引入一种新颖的局部特征聚合模块来克服。 介绍 3D点云语义分割的一个关键挑战是，深度传感器获取的原始点云通常是不规则采样，无结构且无序的，这种非结构化的数据，无法直接投入到深度卷积网络中进行训练。  PointNet的开拓性工作，使得直接">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://example.com/2021/04/21/RandLA-Net/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="RandLA-Net:大场景三维点云语义分割框架概述：一种适用于大规模3D点云语义分割高效且轻量的模型。采用简单的随机点采样方法，随机采样导致的关键特征丢失，通过引入一种新颖的局部特征聚合模块来克服。 介绍 3D点云语义分割的一个关键挑战是，深度传感器获取的原始点云通常是不规则采样，无结构且无序的，这种非结构化的数据，无法直接投入到深度卷积网络中进行训练。  PointNet的开拓性工作，使得直接">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E5%B1%80%E9%83%A8%E7%89%B9%E5%BE%81%E8%81%9A%E5%90%88%E6%A8%A1%E5%9D%97%E7%BB%93%E6%9E%84%E5%9B%BE.png">
+<meta property="og:image" content="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E5%B1%80%E9%83%A8%E7%BC%96%E7%A0%81%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E6%B3%A8%E6%84%8F%E5%8A%9B%E5%BE%97%E5%88%86.png">
+<meta property="og:image" content="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/K%E8%BF%91%E9%82%BB%E7%82%B9%E7%89%B9%E5%BE%81%E5%8A%A0%E6%9D%83.png">
+<meta property="og:image" content="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E6%AE%8B%E5%B7%AE%E5%9D%97%E6%89%A9%E5%A4%A7%E7%82%B9%E7%9A%84%E6%8E%A5%E5%8F%97%E5%9C%BA%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
+<meta property="og:image" content="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/RandLA-Net%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84.png">
+<meta property="article:published_time" content="2021-04-21T01:59:30.771Z">
+<meta property="article:modified_time" content="2021-04-21T02:05:43.267Z">
+<meta property="article:author" content="XinLai">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E5%B1%80%E9%83%A8%E7%89%B9%E5%BE%81%E8%81%9A%E5%90%88%E6%A8%A1%E5%9D%97%E7%BB%93%E6%9E%84%E5%9B%BE.png">
+
+<link rel="canonical" href="http://example.com/2021/04/21/RandLA-Net/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title> | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">6</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/21/RandLA-Net/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/me.jpg">
+      <meta itemprop="name" content="XinLai">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-04-21 09:59:30 / Modified: 10:05:43" itemprop="dateCreated datePublished" datetime="2021-04-21T09:59:30+08:00">2021-04-21</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="RandLA-Net-大场景三维点云语义分割框架"><a href="#RandLA-Net-大场景三维点云语义分割框架" class="headerlink" title="RandLA-Net:大场景三维点云语义分割框架"></a>RandLA-Net:大场景三维点云语义分割框架</h1><p>概述：一种适用于大规模3D点云语义分割高效且轻量的模型。采用简单的随机点采样方法，随机采样导致的关键特征丢失，通过引入一种新颖的局部特征聚合模块来克服。</p>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><ul>
+<li><p>3D点云语义分割的一个关键挑战是，深度传感器获取的原始点云通常是不规则采样，无结构且无序的，这种非结构化的数据，无法直接投入到深度卷积网络中进行训练。</p>
+</li>
+<li><p>PointNet的开拓性工作，使得直接处理3D点云成为可能。它使用共享的多层感知机MLP，但这无法获取每个点更为广泛的上下文信息。</p>
+</li>
+<li><p>为了学习更丰富的局部结构，后续又引入了许多专用的神经模块。这些模块可以归类为：<br>  <strong>1.neighbouring feature pooling</strong><br>  <strong>2.graph message passing</strong><br>  <strong>3.kernel-based convolution</strong><br>  <strong>4.attention-based aggregation</strong> </p>
+</li>
+<li><p>该模型相比于传统的3D点云语义分割方法，最大的优点在于对大规模数据场合的适用性。  </p>
+<p>  <strong>限制因素</strong>：<br>  1.传统网络的点采样方法在计算上或内存效率低下<br>  2.大多数现有的本地特征学习算法，依靠计算昂贵的内核化或图形构造<br>  3.接受场大小有限，现有局部特征学习器要么无法捕获复杂结构，要么效率低下</p>
+<p>  <strong>针对上述限制因素，本文创新性提出了</strong><br>  1.高效的采样方法（随机采样）<br>  （点采样和逆密度采样是小规模点云最常见的采样方法）<br>  2.有效的局部特征学习器 </p>
+</li>
+<li><p>$\color{red}{对每个3D点,首先引入局部空间编码（LocSE）单元以显示的保留局部和结构}$</p>
+</li>
+<li><p>$\color{red}{其次，利用attentive pooling来自动保留有用的本地功能}$</p>
+</li>
+<li><p>$\color{red}{第三，将多个LocSE单元和attentive pooling堆叠为膨胀的残差块，从而大大增加了每个点的有效接收场。}$</p>
+</li>
+<li><p>$\color{red}{所有这些神经组件都实现为共享MLP，因此具有显着的内存和计算效率}$</p>
+</li>
+</ul>
+<h2 id="近期的其他相关研究"><a href="#近期的其他相关研究" class="headerlink" title="近期的其他相关研究"></a>近期的其他相关研究</h2><p>为了从3D点云中提取特征，传统方法通常是手动 hand-craft 特征。最近的基于学习的方法主要包括此处概述的基于投影的，基于体素的和基于点的方案。</p>
+<ul>
+<li><p><strong>基于投影和体素的网络：</strong>   为了利用2D CNNs的成功，许多工作将3D点云投影/展平到2D图像上，以解决对象检测的任务。但是，在投影过程中会丢失许多几何细节。或者，可以将点云体素化为3D网格，然后应用强大的3D CNNs。尽管它们在语义分割和对象检测方面取得了领先的成果，但它们的主要局限性是计算量大，特别是在处理大规模点云时。</p>
+</li>
+<li><p><strong>基于点的网络：</strong> 受PointNet / PointNet ++ 的启发，许多最新著作引入了复杂的神经模块来学习每点的局部特征。这些模块通常可分类为1）neighbouring feature pooling，2）graph message passing，3）kernel-based convolution 和 4） attention-based aggregation。尽管这些网络在小点云上已显示出令人鼓舞的结果，但是由于它们的高计算和内存成本，它们中的大多数不能直接扩展到大型方案。</p>
+</li>
+<li><p><strong>学习大规模点云：</strong> SPG 将大点云作为超级图进行预处理，以学习每个超点语义。最近的FCPN 和PCT 将基于体素的网络和基于点的网络都应用于处理大量的点云。但是，图分区和体素化在计算上都是昂贵的。相反，我们高效的RandLA-Net可进行端到端的训练，而无需任何其他的前/后处理步骤。</p>
+</li>
+</ul>
+<p>与它们相比，RandLA-Net在四种方面有所区别：</p>
+<ol>
+<li>它仅依赖于网络内的随机采样，因此需要更少的内存和计算量；</li>
+<li>所提出的局部特征聚合器可以通过明确考虑局部空间关系和点特征来获得连续更大的接收场，从而对于学习复杂的局部模式更加有效和健壮；</li>
+<li>整个网络仅由共享的MLP组成，而不依赖于任何昂贵的操作（如图形构建和内核化），因此对于大规模点云而言，效率极高。</li>
+<li>RandLA-Net可进行端到端的培训，而无需任何其他的前/后处理步骤</li>
+</ol>
+<h2 id="RandLA-Net"><a href="#RandLA-Net" class="headerlink" title="RandLA-Net"></a>RandLA-Net</h2><ul>
+<li><p><strong>随机采样</strong></p>
+</li>
+<li><p><strong>本地特征聚合</strong></p>
+<p>  如下图所示，局部特征聚合模块并行地应用于每个3D点，它由三个神经单元组成：1）局部空间编码（LocSE），2）attentive pooling 3 ）dilated residual block(扩张的残差块)。</p>
+<p>  <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E5%B1%80%E9%83%A8%E7%89%B9%E5%BE%81%E8%81%9A%E5%90%88%E6%A8%A1%E5%9D%97%E7%BB%93%E6%9E%84%E5%9B%BE.png"></p>
+<ol>
+<li><p>Local Spatial Encoding<br> 给定点云P以及每个点的特征（例如原始RGB或中间学习的特征），此局部空间编码单元会明确嵌入所有相邻点的x-y-z坐标，从而使相应的点特征始终知道其相对位置空间位置。这使LocSE单元可以显式观察局部几何图案，从而最终使整个网络受益，而有效地学习复杂的局部结构。特别地，该单元包括以下步骤：   </p>
+<p> <strong>Finding Neighbouring Points.</strong> 对于第i个点，通过简单的基于逐点欧几里得距离的K近邻（KNN）算法收集其相邻点。  </p>
+<p> <strong>Relative Point Position Encoding.</strong> 对于中心点$p_i$的每个最近的K个点{$p_i^1···p_i^k···p_i^K$},我们明确编码相对点位置，如下所示：</p>
+<p> <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E5%B1%80%E9%83%A8%E7%BC%96%E7%A0%81%E7%BB%93%E6%9E%84.png"></p>
+<ul>
+<li>$p_i$和$p_i^k$是点的x-y-z位置</li>
+<li>⊕是串联操作</li>
+<li>|| ·||计算相邻点和中心点之间的欧几里得距离</li>
+<li>看起来$r_i^k$是根据冗余点位置信息进行编码的。有趣的是，这倾向于帮助网络学习局部特征并在实践中获得良好的性能。</li>
+</ul>
+<p> <strong>Point Feature Augmentation.</strong> 对于每个相邻点$p_i^k$，将编码的相对点位置$r_i^k$与它的对应点特征$f_i^k$串联在一起，从而获得增强的特征向量$\hat{f}_i^k$<br> 最终，LocSE单元的输出是一组新的相邻要素$\hat{F_i}={\hat{f}_i^1···\hat{f}_i^k···\hat{f}_i^K}$，它明确地编码了中心点$p_i$的局部几何结构。  </p>
+</li>
+<li><p>Attentive Pooling<br> 该神经单元用于汇总邻近点特征$\hat{F_i}$的集合。现有论文通常使用最大/平均池来硬集成相邻特征，从而导致大部分信息丢失。相比之下，网络转向强大的注意力机制来自动学习重要的本地特征。<br> <strong>Computing Attention Scores.</strong> 给定一组局部特征$\hat{F_i}$，设计了一个共享函数g()来为每个功能学习唯一的注意力得分。基本上，函数g()包含一个共享MLP，后跟softmax。它的正式定义如下：<br> <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E6%B3%A8%E6%84%8F%E5%8A%9B%E5%BE%97%E5%88%86.png"><br> 其中W是共享MLP的可学习权重.  </p>
+<p> <strong>Weighted Summation.</strong> 学到的注意力分数可以看作是自动选择重要特征的softmask。正式地，这些特征的加权总和如下：<br> <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/K%E8%BF%91%E9%82%BB%E7%82%B9%E7%89%B9%E5%BE%81%E5%8A%A0%E6%9D%83.png"></p>
+</li>
+<li><p>Dilated Residual Block(膨胀残留块)</p>
+<ul>
+<li>由于将要对大的点云进行实质性的下采样，因此希望显着增加每个点的接收场，从而即使某些点被丢弃，输入点云的几何细节也更有可能被保留。</li>
+<li>如图3所示，将多个LocSE和Attentive Pooling单元通过a skip connection堆叠在一起，作为扩张的残差块</li>
+<li>为了进一步说明扩张残差块的功能，图4显示了红色3D点在第一次LocSE / Attentive Pooling操作之后观察到K KK个相邻点，然后在第二次之后能够从最多$K^2$个相邻点（即two-hop neighbourhood ）接收信息。这是扩大接受域并通过特征传播扩大有效邻域的cheap方法。</li>
+<li>从理论上讲，堆叠的单位越多，此block的作用范围就越大，越强大。但是，更多的单元将不可避免地牺牲整体计算效率。另外，整个网络很可能会过度配合。</li>
+<li>在RandLA-Net中，简单地堆叠了两组LocSE和Attentive Pooling作为标准残差块，在效率和效果之间取得了令人满意的平衡。   </li>
+</ul>
+<p> <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/%E6%AE%8B%E5%B7%AE%E5%9D%97%E6%89%A9%E5%A4%A7%E7%82%B9%E7%9A%84%E6%8E%A5%E5%8F%97%E5%9C%BA%E7%A4%BA%E6%84%8F%E5%9B%BE.png"></p>
+<p> <strong>总体而言</strong></p>
+<ul>
+<li>局部特征聚合模块旨在通过明确考虑相邻的几何形状并显着增加接收场来有效保留复杂的局部结构。</li>
+<li>该模块仅由前馈MLP组成，因此计算效率高。</li>
+</ul>
+</li>
+<li><p>Implementation</p>
+<ul>
+<li>通过堆叠多个局部特征聚合模块和随机采样层来实现RandLA-Net。</li>
+<li>将Adam优化器与默认参数一起使用。初始学习率设置为0.01，并在每个时期后降低5％。最近点的数量K设置为16。</li>
+<li>为了并行训练RandLA-Net，从每个点云中采样固定数量的点$(~10^6)$作为输入。</li>
+<li>在测试过程中，整个原始点云将送到网络中，以推断每个点的语义，而无需任何预处理/后处理。  </li>
+</ul>
+</li>
+</ol>
+<p>  <strong>网络详细结构如下图所示：</strong><br>  <img src="https://gitee.com/FenNuDeShaGua/pic-go-picturs/raw/master/RandLA-Net/RandLA-Net%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84.png"></p>
+</li>
+<li><p>图7显示了RandLANet的详细架构。</p>
+</li>
+<li><p>该网络遵循具有跳跃连接的广泛使用的编码器-解码器体系结构。</p>
+</li>
+<li><p>首先将输入点云馈送到共享的MLP层以提取每个点的特征。</p>
+</li>
+<li><p>然后使用四个编码和解码层来学习每个点的特征。</p>
+</li>
+<li><p>最后，使用三个完全连接的层和一个dropout层来预测每个点的语义标签。每个部分的详细信息如下：<br>  <strong>NetNetwork Input:</strong>  输入是一个大型的点云，大小为$N*d_{in}$（不考虑批处理）,其中N是点数$d_{in}$是每个输入点的特征维。</p>
+<ul>
+<li>对于S3DIS 和Semantic3D 数据集，每个点都由其3D坐标和颜色信息（即x-y-z-R-G-B）表示，</li>
+<li>而SemanticKITTI [3]数据集的每个点仅由3D坐标表示。</li>
+</ul>
+<p>  <strong>Encoding Layers:</strong> </p>
+<ul>
+<li>网络中使用了四个编码层，以逐渐减小点云的大小并增加每点特征的尺寸。</li>
+<li>每个编码层都包含一个局部特征聚合模块（第4.3节）和一个随机采样操作（第4.2节）。</li>
+<li>点云以四倍的抽取比率进行下采样。特别是，每层之后仅保留25％的点，即（N→N/4→N/6→N/64→N /256）。</li>
+<li>同时，逐点特征维逐渐增加每一层以保留更多信息，即（8→32→128→256→512）。</li>
+</ul>
+<p>  <strong>Decoding Layers:</strong></p>
+<ul>
+<li>在上述编码层之后使用四个解码层。</li>
+<li>对于解码器中的每一层，我们首先使用KNN算法为每个查询点找到一个最近的相邻点，</li>
+<li>然后通过$\color{red}最近邻插值$对点特征集进行上采样。</li>
+<li>接下来，将经过上采样的特征图与通过skip连接对图层进行编码而生成的中间特征图进行级联，之后将共享的MLP应用于级联特征图。</li>
+</ul>
+<p>  <strong>Final Semantic Prediction:</strong></p>
+<ul>
+<li>每个点的最终语义标签是通过三个共享的全连接层（N，64）→（N，32）→（N，nclass）和a dropout layer获得的。dropout ratio 为0.5。</li>
+</ul>
+<p>  <strong>Network Output:</strong></p>
+<ul>
+<li>RandLA-Net的输出是所有点的预测语义，大小为$N*n_{class}$,其中$n_{class}$是类的数量。</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/21/%E9%9A%90%E9%A9%AC%E5%B0%94%E7%A7%91%E5%A4%AB%E6%A8%A1%E5%9E%8B/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/04/21/%E6%AE%8B%E5%B7%AE%E7%BD%91%E7%BB%9C/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#RandLA-Net-%E5%A4%A7%E5%9C%BA%E6%99%AF%E4%B8%89%E7%BB%B4%E7%82%B9%E4%BA%91%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E6%A1%86%E6%9E%B6"><span class="nav-number">1.</span> <span class="nav-text">RandLA-Net:大场景三维点云语义分割框架</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%91%E6%9C%9F%E7%9A%84%E5%85%B6%E4%BB%96%E7%9B%B8%E5%85%B3%E7%A0%94%E7%A9%B6"><span class="nav-number">1.2.</span> <span class="nav-text">近期的其他相关研究</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RandLA-Net"><span class="nav-number">1.3.</span> <span class="nav-text">RandLA-Net</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="XinLai"
+      src="/images/me.jpg">
+  <p class="site-author-name" itemprop="name">XinLai</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/jscksy" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;jscksy" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:m202077343@hust.edu.cn" title="E-Mail → mailto:m202077343@hust.edu.cn" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">XinLai</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
